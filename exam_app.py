@@ -174,148 +174,161 @@ if 'current_question' not in st.session_state:
 # ==================== HELPER FUNCTIONS ====================
 def roll_to_seed(roll_number: str) -> int:
     """Convert any roll number string into a stable numeric seed."""
-    return int(hashlib.md5(roll_number.encode()).hexdigest(), 16) % (2**32)
+    # Add salt to ensure different questions than previous exam
+    salted = roll_number + "_v2_jan2026"
+    return int(hashlib.md5(salted.encode()).hexdigest(), 16) % (2**32)
 
 def generate_questions(roll_number):
-    """Generate unique questions based on roll number with separate parts"""
+    """Generate NEW questions - completely different from previous exam"""
     np.random.seed(roll_to_seed(roll_number))
     
     questions = []
     
-    # Q1: Perceptron calculation
-    weights = np.random.uniform(-1, 1, 3).round(2)
-    bias = round(np.random.uniform(-0.5, 0.5), 2)
-    inputs = np.random.randint(1, 5, 3)
+    # NEW Q1: Multi-layer Perceptron Forward Pass
+    w1 = np.random.uniform(0.2, 0.8, 2).round(2)
+    w2 = np.random.uniform(0.3, 0.9, 2).round(2)
+    b1 = round(np.random.uniform(-0.3, 0.3), 2)
+    b2 = round(np.random.uniform(-0.4, 0.4), 2)
+    x1, x2 = np.random.randint(1, 4, 2)
     
-    net_input = round(np.dot(weights, inputs) + bias, 4)
-    sigmoid_output = round(1 / (1 + np.exp(-net_input)), 4)
+    # Calculate answer
+    h1 = max(0, w1[0] * x1 + w1[1] * x2 + b1)  # ReLU
+    output = w2[0] * h1 + w2[1] * 1 + b2  # Linear (second input is bias=1)
     
     questions.append({
         'id': 'q1',
         'marks': 2,
-        'title': 'Perceptron Calculation',
-        'question_text': f"""A perceptron has:
-- Weights **w = {list(weights)}**
-- Bias **b = {bias}**
-- Input **x = {list(inputs)}**""",
+        'title': 'Multi-Layer Perceptron Forward Pass',
+        'question_text': f"""A 2-layer neural network with:
+- **Layer 1 weights:** w1 = {list(w1)}, bias b1 = {b1}
+- **Layer 2 weights:** w2 = {list(w2)}, bias b2 = {b2}
+- **Input:** x = [{x1}, {x2}]
+- **Activation:** ReLU for hidden layer, Linear for output
+
+*ReLU(z) = max(0, z)*""",
         'parts': [
-            {'id': 'a', 'text': 'Calculate the **net input** (z = w·x + b)', 'marks': 1},
-            {'id': 'b', 'text': 'Calculate the **output after sigmoid activation**: σ(z) = 1/(1+e^(-z))', 'marks': 1}
+            {'id': 'a', 'text': 'Calculate hidden layer output: h1 = ReLU(w1[0]×x[0] + w1[1]×x[1] + b1)', 'marks': 1},
+            {'id': 'b', 'text': 'Calculate final output: y = w2[0]×h1 + w2[1]×1 + b2', 'marks': 1}
         ],
         'answer_key': {
-            'net_input': net_input,
-            'sigmoid_output': sigmoid_output
+            'h1': round(h1, 4),
+            'output': round(output, 4)
         }
     })
     
-    # Q2: Gradient Descent
-    lr = round(np.random.choice([0.001, 0.01, 0.1]), 3)
-    current_weight = 0.5
-    gradient_pos = 2.0
-    gradient_neg = -2.0
+    # NEW Q2: Batch vs Stochastic Gradient Descent
+    batch_size = int(np.random.choice([4, 8, 16]))
+    dataset_size = int(np.random.choice([100, 200, 500]))
+    epochs = int(np.random.choice([5, 10, 20]))
     
-    updated_pos = round(current_weight - lr * gradient_pos, 4)
-    updated_neg = round(current_weight - lr * gradient_neg, 4)
+    # Calculate answer
+    sgd_updates = dataset_size * epochs
+    batch_updates = (dataset_size // batch_size) * epochs
     
     questions.append({
         'id': 'q2',
         'marks': 2,
-        'title': 'Gradient Descent',
-        'question_text': f"""You're using gradient descent with:
-- Learning rate **α = {lr}**
-- Current weight **w = {current_weight}**
-- Gradient **∂L/∂w = {gradient_pos}**
+        'title': 'Gradient Descent Variants',
+        'question_text': f"""You have a dataset with **{dataset_size} samples**. You train for **{epochs} epochs**.
 
-*Update rule: w_new = w_old - α × ∂L/∂w*""",
+**Batch Gradient Descent:** Uses all samples per update  
+**Stochastic Gradient Descent (SGD):** Uses 1 sample per update  
+**Mini-batch GD:** Uses {batch_size} samples per update""",
         'parts': [
-            {'id': 'a', 'text': 'Calculate the **updated weight** after one gradient descent step', 'marks': 1},
-            {'id': 'b', 'text': f'If the gradient was **{gradient_neg}** instead, what would be the new weight?', 'marks': 1}
+            {'id': 'a', 'text': f'How many **weight updates** occur with **SGD** over {epochs} epochs?', 'marks': 1},
+            {'id': 'b', 'text': f'How many **weight updates** occur with **mini-batch GD (batch size={batch_size})** over {epochs} epochs?', 'marks': 1}
         ],
         'answer_key': {
-            'updated_weight_positive': updated_pos,
-            'updated_weight_negative': updated_neg
+            'sgd_updates': sgd_updates,
+            'minibatch_updates': batch_updates
         }
     })
     
-    # Q3: Backpropagation
-    w1 = round(np.random.uniform(0.3, 0.7), 2)
-    w2 = round(np.random.uniform(0.4, 0.8), 2)
-    x_input = 2.0
-    target = 5.0
+    # NEW Q3: Loss Function and Gradient
+    pred = round(np.random.uniform(2.0, 4.0), 2)
+    target = round(np.random.uniform(5.0, 7.0), 2)
     
-    h = max(0, w1 * x_input)  # ReLU
-    y = w2 * h  # Linear output
-    loss = (y - target) ** 2
+    # MSE Loss and gradient
+    loss = (pred - target) ** 2
+    gradient = 2 * (pred - target)
     
     questions.append({
         'id': 'q3',
         'marks': 2,
-        'title': 'Forward Pass & Loss Calculation',
-        'question_text': f"""A 2-layer neural network:
-- **Input (x)** → **Hidden (h)** → **Output (y)**
-- Weight w1 = **{w1}** (input to hidden)
-- Weight w2 = **{w2}** (hidden to output)
-- Activation: **ReLU** for hidden, **Linear** for output
-- Input: **x = {x_input}**
-- Target: **t = {target}**
-- Loss function: **L = (y - t)²**""",
+        'title': 'Loss Function & Gradient Calculation',
+        'question_text': f"""You're using **Mean Squared Error (MSE)** loss: L = (ŷ - y)²
+
+Current prediction: **ŷ = {pred}**  
+Target value: **y = {target}**
+
+*Derivative: ∂L/∂ŷ = 2(ŷ - y)*""",
         'parts': [
-            {'id': 'a', 'text': 'Calculate the **forward pass**: h = ReLU(w1 × x) and y = w2 × h', 'marks': 1},
-            {'id': 'b', 'text': 'Calculate the **loss value** L', 'marks': 1}
+            {'id': 'a', 'text': 'Calculate the **loss value** L', 'marks': 1},
+            {'id': 'b', 'text': 'Calculate the **gradient** ∂L/∂ŷ', 'marks': 1}
         ],
         'answer_key': {
-            'h': round(h, 4),
-            'y': round(y, 4),
-            'loss': round(loss, 4)
+            'loss': round(loss, 4),
+            'gradient': round(gradient, 4)
         }
     })
     
-    # Q4: Activation Functions
-    threshold = round(np.random.choice([0.4, 0.5, 0.6]), 1)
-    outputs = [0.8, 0.3, 0.9, 0.1]
-    step_outputs = [1 if x > threshold else 0 for x in outputs]
-    sigmoid_03 = round(1 / (1 + np.exp(-0.3)), 4)
+    # NEW Q4: Activation Function Properties
+    val1 = round(np.random.uniform(-2.0, -0.5), 2)
+    val2 = round(np.random.uniform(1.0, 3.0), 2)
+    
+    # ReLU outputs
+    relu_val1 = max(0, val1)
+    relu_val2 = max(0, val2)
+    
+    # Tanh approximation
+    tanh_val2 = round(np.tanh(val2), 4)
     
     questions.append({
         'id': 'q4',
         'marks': 2,
-        'title': 'Activation Functions Comparison',
-        'question_text': f"""You have model outputs: **[0.8, 0.3, 0.9, 0.1]** from a binary classifier.""",
+        'title': 'Activation Functions: ReLU vs Tanh',
+        'question_text': f"""Given two values: **z1 = {val1}** and **z2 = {val2}**
+
+**ReLU:** f(z) = max(0, z)  
+**Tanh:** f(z) = (e^z - e^(-z))/(e^z + e^(-z))""",
         'parts': [
-            {'id': 'a', 'text': f'Apply **step activation** with threshold = **{threshold}**. What are the final outputs?', 'marks': 1},
-            {'id': 'b', 'text': f'If you use **sigmoid** instead, calculate sigmoid(0.3) and determine if it\'s > {threshold} or < {threshold}', 'marks': 1}
+            {'id': 'a', 'text': f'Calculate **ReLU(z1)** and **ReLU(z2)**', 'marks': 1},
+            {'id': 'b', 'text': f'Which activation function can output **negative values**: ReLU or Tanh? Justify with an example.', 'marks': 1}
         ],
         'answer_key': {
-            'step_outputs': step_outputs,
-            'sigmoid_0.3': sigmoid_03
+            'relu_z1': relu_val1,
+            'relu_z2': relu_val2,
+            'negative_capable': 'Tanh (can output values from -1 to 1)'
         }
     })
     
-    # Q5: MLP Architecture
-    img_size = int(np.random.choice([16, 28, 32]))
-    hidden1 = int(np.random.choice([64, 128, 256]))
-    num_classes = 10
+    # NEW Q5: Neural Network Architecture - Parameters Count
+    input_features = int(np.random.choice([20, 50, 100]))
+    hidden_neurons = int(np.random.choice([32, 64, 128]))
+    output_classes = int(np.random.choice([3, 5, 10]))
     
-    input_size = img_size * img_size
-    params = (input_size * hidden1) + hidden1  # weights + biases
+    # Calculate parameters
+    params_layer1 = (input_features * hidden_neurons) + hidden_neurons
+    params_layer2 = (hidden_neurons * output_classes) + output_classes
+    total_params = params_layer1 + params_layer2
     
     questions.append({
         'id': 'q5',
         'marks': 2,
-        'title': 'MLP Architecture Design',
-        'question_text': f"""Design a 3-layer MLP:
-- Input: **{img_size}×{img_size}** grayscale images
-- Hidden layer 1: **{hidden1}** neurons
-- Output: **10 classes** (digits 0-9)""",
+        'title': 'Neural Network Parameters Calculation',
+        'question_text': f"""A neural network architecture:
+- **Input layer:** {input_features} features
+- **Hidden layer:** {hidden_neurons} neurons
+- **Output layer:** {output_classes} classes (softmax)
+
+Each layer has **bias terms**.""",
         'parts': [
-            {'id': 'a', 'text': 'Calculate the **input layer size**', 'marks': 0.5},
-            {'id': 'b', 'text': 'Calculate the **number of parameters** (weights + biases) between input and hidden layer 1', 'marks': 1},
-            {'id': 'c', 'text': 'Which **activation function** should be used for the output layer and **why**?', 'marks': 0.5}
+            {'id': 'a', 'text': f'Calculate **total parameters** (weights + biases) between input and hidden layer', 'marks': 1},
+            {'id': 'b', 'text': f'Calculate **total parameters** in the entire network (all layers)', 'marks': 1}
         ],
         'answer_key': {
-            'input_size': input_size,
-            'parameters': params,
-            'output_activation': 'Softmax (for multiclass classification)'
+            'params_layer1': params_layer1,
+            'total_params': total_params
         }
     })
     
@@ -399,7 +412,7 @@ def main():
     roll = st.session_state.roll_number if st.session_state.roll_number else ""
     st.markdown(get_anti_cheat_js(roll, elapsed_time_str), unsafe_allow_html=True)
     
-    st.title("Quiz 1")
+    st.title("🧠 Deep Learning Quiz 1 - Retake")
     st.markdown("---")
     
     # ==================== LOGIN SCREEN ====================
@@ -411,9 +424,10 @@ def main():
         <div style='background-color: #ff4444; padding: 15px; border-radius: 5px; margin-bottom: 20px;'>
             <h3 style='color: white; margin: 0;'>⚠️ EXAM INTEGRITY NOTICE</h3>
             <p style='color: white; margin: 10px 0 0 0; font-size: 14px;'>
-                • All activities are monitored and logged.<br>
+                • All activities are monitored and logged<br>
                 • Violations will result in mark deductions or disciplinary action<br>
-                • This exam must be completed within 20 minutes
+                • This exam must be completed within 20 minutes<br>
+                • <strong>NEW QUESTIONS - Different from previous attempt</strong>
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -422,11 +436,12 @@ def main():
         st.markdown("""
         - This is a **20-minute** timed exam worth **10 marks** (5 questions × 2 marks each)
         - Questions appear **one at a time** - navigate using Next/Previous buttons
-        - Each question has **multiple parts (a, b, c)** with separate answer boxes
+        - Each question has **multiple parts (a, b)** with separate answer boxes
         - Each student has **different numerical parameters** in questions
         - **DO NOT** refresh the page or close the browser tab
         - You must **show your step-by-step calculations** for each part
         - Click **"Start Exam"** only when you are completely ready
+        - **Timer will NOT auto-update** - click Next/Previous to refresh
         """)
         
         st.markdown("---")
@@ -534,7 +549,7 @@ def main():
                         answered_count += 1
             
             total_parts = sum(len(q['parts']) for q in st.session_state.questions)
-            st.info(f"📊 {answered_count}/{total_parts} parts answered")
+            st.info(f"📊 {answered_count}/{total_parts} parts")
         
         with col3:
             if st.session_state.current_question < total_questions - 1:
@@ -543,7 +558,7 @@ def main():
                     st.rerun()
         
         with col4:
-            if st.button("✅ Submit Exam", type="primary", use_container_width=True):
+            if st.button("✅ Submit", type="primary", use_container_width=True):
                 # Check if answers are provided
                 answered_parts = sum(
                     1 for q in st.session_state.questions 
@@ -568,10 +583,6 @@ def main():
                     """)
                     st.balloons()
                     st.stop()
-        
-        # Auto-refresh every second for timer update
-        time.sleep(1)
-        st.rerun()
 
 # ==================== RUN APPLICATION ====================
 if __name__ == "__main__":
