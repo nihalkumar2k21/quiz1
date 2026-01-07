@@ -381,7 +381,7 @@ def main():
     roll = st.session_state.roll_number if st.session_state.roll_number else ""
     st.markdown(get_anti_cheat_js(roll, current_time), unsafe_allow_html=True)
     
-    st.title("🧠 Deep Learning Exam")
+    st.title("Quiz 1")
     st.markdown("---")
     
     # ==================== LOGIN SCREEN ====================
