@@ -7,8 +7,8 @@ import hashlib
 
 # Page config - must be first Streamlit command
 st.set_page_config(
-    page_title="Deep Learning Exam",
-    page_icon="🧠",
+    page_title="Quiz 1",
+    # page_icon="🧠",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
@@ -394,10 +394,9 @@ def main():
         <div style='background-color: #ff4444; padding: 15px; border-radius: 5px; margin-bottom: 20px;'>
             <h3 style='color: white; margin: 0;'>⚠️ EXAM INTEGRITY NOTICE</h3>
             <p style='color: white; margin: 10px 0 0 0; font-size: 14px;'>
-                • All activities are monitored and logged (screenshots, tab switches, copy attempts)<br>
-                • Each student receives unique question parameters<br>
+                • All activities are monitored and logged.<br>
                 • Violations will result in mark deductions or disciplinary action<br>
-                • This exam must be completed honestly within 20 minutes
+                • This exam must be completed within 20 minutes
             </p>
         </div>
         """, unsafe_allow_html=True)
