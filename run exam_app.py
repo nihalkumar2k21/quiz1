@@ -8,7 +8,6 @@ import hashlib
 # Page config - must be first Streamlit command
 st.set_page_config(
     page_title="Quiz 1",
-    #page_icon="🧠",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
